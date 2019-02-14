@@ -35,7 +35,8 @@ const FilterInput = styled.input`
 const ErrorMessage = styled.span`
   color: red;
 `;
-const FilterError = ({ error }) => error && <ErrorMessage>{error.message}</ErrorMessage>;
+const FilterError = ({ error }) =>
+  error && <ErrorMessage>{error.message}</ErrorMessage>;
 
 const Container = styled.div`
   position: absolute;
@@ -60,9 +61,11 @@ const App = () => {
     setState({ loading: true });
     fetch('/translations')
       .then(res => res.json())
-      .then(translations => {
+      .then(t => {
         setState({
-          translations,
+          langs: t.languages,
+          // R.sort((a, b) => a.localeCompare(b)),
+          translations: t.translations,
           loading: false,
         });
       })
@@ -101,7 +104,9 @@ const App = () => {
             placeholder="regex filter"
             type="text"
             value={filterState.value}
-            onChange={e => setFilterState({ value: e.target.value, error: null })}
+            onChange={e =>
+              setFilterState({ value: e.target.value, error: null })
+            }
           />
           <FilterError error={filterState.error} />
         </TitleLeft>
