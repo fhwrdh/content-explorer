@@ -4,7 +4,7 @@ const axios = require('axios');
 const { buildTranslations } = require('./translations');
 const { debug } = require('./utils');
 
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 
 const start = async () => {
   debug('Gathering data...');
