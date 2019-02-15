@@ -64,7 +64,6 @@ const App = () => {
       .then(t => {
         setState({
           langs: t.languages,
-          // R.sort((a, b) => a.localeCompare(b)),
           translations: t.translations,
           loading: false,
         });
@@ -82,15 +81,9 @@ const App = () => {
   }
 
   const filtered = re
-    ? R.filter(row => {
-        return (
-          re.test(row.key) ||
-          re.test(row.en) ||
-          re.test(row.de) ||
-          re.test(row.zh) ||
-          re.test(row.es)
-        );
-      })(state.translations || [])
+    ? R.filter(row =>
+        R.reduce((m, l) => m || re.test(row[l]), false)(['key', ...state.langs])
+      )(state.translations || [])
     : state.transitions || [];
 
   return (
@@ -135,11 +128,15 @@ const App = () => {
                   rowClassName="translations-row"
                   rowGetter={({ index }) => filtered[index]}
                 >
-                  <Column label="Key" dataKey="key" width={width / cols} />
-                  <Column label="en" dataKey="en" width={width / cols} />
-                  <Column label="de" dataKey="de" width={width / cols} />
-                  <Column label="zh" dataKey="zh" width={width / cols} />
-                  <Column label="es" dataKey="es" width={width / cols} />
+                  {state.langs &&
+                    R.map(l => (
+                      <Column
+                        key={l}
+                        label={l}
+                        dataKey={l}
+                        width={width / cols}
+                      />
+                    ))(['key', ...state.langs])}
                 </Table>
               );
             }}

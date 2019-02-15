@@ -1,23 +1,30 @@
 const R = require('ramda');
-
-const DEBUG = true;
-const debug = args => DEBUG && console.log.apply(console, ['DEBUG', args]);
-const mapIndex = R.addIndex(R.map);
+const { debug, mapIndex } = require('./utils');
 
 const contentUrl = 'http://members.cj.com/member/content.json';
-const languages = ['de', 'en', 'es', 'zh'];
+const languages = R.sort(R.comparator(R.lt))([
+  'cs',
+  'de',
+  'en',
+  'es',
+  'fr',
+  'ja',
+  'pl',
+  'pt',
+  'zh',
+]);
+debug('languages: ', languages);
 
 const getContentWith = getter => async language => {
-  // debug(`getting content: ${language}`);
+  debug(`getting content: ${language}`);
   const response = await getter(`${contentUrl}?l=${language}&p`);
-  // debug(`returning data for ${language}: ${response.status}`);
+  debug(`returning data for ${language}: ${response.status}`);
   return response.data;
 };
 
 const buildTranslations = async getter => {
   const getContent = getContentWith(getter);
   const translationsArray = await Promise.all(R.map(getContent)(languages));
-  // console.log('translationsArray: ', translationsArray);
   const langToTranslationsMap = R.fromPairs(
     R.zip(languages, translationsArray)
   );
@@ -42,8 +49,8 @@ const buildTranslations = async getter => {
   //   {key: 'key1', de: 'german[key1]', ...}
   //   ]
 
-  const dd = mapIndex((k, i) => {
-    const a = R.reduce(
+  const translations = mapIndex((k, i) => {
+    const t = R.reduce(
       (acc, lang) => ({
         ...acc,
         [lang]: langToTranslationsMap[lang][k],
@@ -53,13 +60,13 @@ const buildTranslations = async getter => {
 
     return {
       key: k,
-      ...a,
+      ...t,
     };
   })(sortedKeys);
 
   return {
     languages,
-    translations: dd,
+    translations,
   };
 };
 

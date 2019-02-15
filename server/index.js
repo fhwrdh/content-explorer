@@ -2,13 +2,14 @@ const express = require('express');
 const morgan = require('morgan');
 const axios = require('axios');
 const { buildTranslations } = require('./translations');
+const { debug } = require('./utils');
 
 const PORT = 4000;
 
 const start = async () => {
-  console.log('Gathering data...');
+  debug('Gathering data...');
   const translations = await buildTranslations(axios.get);
-  console.log('translations.length: ', translations.length);
+  debug('translations.length: ', translations.translations.length);
 
   const app = express();
   app.use(morgan('tiny'));
