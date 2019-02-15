@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import * as R from 'ramda';
 import styled from 'styled-components/macro';
 import { Column, Table, AutoSizer } from 'react-virtualized';
+import { Button } from '@cjdev/visual-stack/lib/components/Button';
 import 'react-virtualized/styles.css'; // only needs to be imported once
 import './App.css';
 
@@ -53,16 +54,32 @@ const App = () => {
     error: null,
   });
   const [state, setState] = useState({
+    lastUpdate: undefined,
     loading: false,
     translations: [],
   });
 
+  const handleClickRefresh = () => {
+    setState({ loading: true });
+    fetch('/refresh')
+      .then(res => res.json())
+      .then(t => {
+        setState({
+          lastUpdate: t.lastUpdate,
+          langs: t.languages,
+          translations: t.translations,
+          loading: false,
+        });
+      })
+      .catch(err => console.log('ERROR', err));
+  };
   useEffect(() => {
     setState({ loading: true });
     fetch('/translations')
       .then(res => res.json())
       .then(t => {
         setState({
+          lastUpdate: t.lastUpdate,
           langs: t.languages,
           translations: t.translations,
           loading: false,
@@ -79,7 +96,6 @@ const App = () => {
       error,
     });
   }
-
   const filtered = re
     ? R.filter(row =>
         R.reduce((m, l) => m || re.test(row[l]), false)(['key', ...state.langs])
@@ -91,24 +107,40 @@ const App = () => {
       <Title>
         <TitleLeft>
           <H1>Content Explorer</H1>
-          {state.loading && ' Loading... '}
-          <FilterInput
-            error={filterState.error}
-            placeholder="regex filter"
-            type="text"
-            value={filterState.value}
-            onChange={e =>
-              setFilterState({ value: e.target.value, error: null })
-            }
-          />
-          <FilterError error={filterState.error} />
+          {state.loading ? (
+            ' Loading... '
+          ) : (
+            <>
+              <FilterInput
+                error={filterState.error}
+                placeholder="regex filter"
+                type="text"
+                value={filterState.value}
+                onChange={e =>
+                  setFilterState({ value: e.target.value, error: null })
+                }
+              />
+              <FilterError error={filterState.error} />
+            </>
+          )}
         </TitleLeft>
         <TitleRight>
           {state.translations && (
             <span>
               {filtered.length}
               {' / '}
-              {state.translations.length} translations
+              {state.translations.length} translations (
+              {state.lastUpdate
+                ? `${new Date(
+                    state.lastUpdate
+                  ).toLocaleDateString()} ${new Date(
+                    state.lastUpdate
+                  ).toLocaleTimeString()}`
+                : ''}
+              )
+              <Button type="outline-secondary" onClick={handleClickRefresh}>
+                Refresh
+              </Button>
             </span>
           )}
         </TitleRight>
